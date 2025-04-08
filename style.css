@@ -8,10 +8,10 @@
     cursor: pointer;
 }
 #gameContainer{
-    font-family: "Permanent mMrker", cursive;
+    font-family: "Permanent Marker", cursive;
     text-align: center;
 }
-.cellContainer{
+#cellContainer{
     display: grid;
     grid-template-columns: repeat(3, auto);
     width: 225px;
