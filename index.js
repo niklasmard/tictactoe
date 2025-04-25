@@ -98,6 +98,25 @@ function restartGame(){
 function getBestMove() {
     if (!running) return; // Stop if the game is over
 
+    // Introduce randomness: 20% chance to make a random move
+    const makeRandomMove = Math.random() < 0.2;
+
+    if (makeRandomMove) {
+        // Make a random move
+        let availableMoves = [];
+        for (let i = 0; i < options.length; i++) {
+            if (options[i] === "") {
+                availableMoves.push(i);
+            }
+        }
+        const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        options[randomMove] = "O";
+        cells[randomMove].textContent = "O";
+        checkWinner();
+        return;
+    }
+
+    // Otherwise, make the best move using Minimax
     let bestScore = -Infinity;
     let move;
 
