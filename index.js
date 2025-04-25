@@ -41,37 +41,45 @@ function updateCell(cell, index){
     cell.textContent = currentPlayer;
 }
 
-function changePlayer(){
-    currentPlayer = (currentPlayer == "X") ? "O" : "X";
-    statusText.textContent = `${currentPlayer}'s turn`;
+function changePlayer() {
+    if (!running) return; // Stop if the game is over
+
+    currentPlayer = (currentPlayer === "X") ? "O" : "X";
+
+    if (currentPlayer === "O" && running) {
+        setTimeout(getBestMove, 200); // AI makes its move with a slight delay
+    } else {
+        statusText.textContent = `${currentPlayer}'s turn`;
+    }
 }
 
-function checkWinner(){
+function checkWinner() {
     let roundWon = false;
-    for(let i = 0; i < winConditions.length; i++){
+
+    for (let i = 0; i < winConditions.length; i++) {
         const condition = winConditions[i];
         const cellA = options[condition[0]];
         const cellB = options[condition[1]];
         const cellC = options[condition[2]];
 
-        if(cellA === "" || cellB === "" || cellC === ""){
+        if (cellA === "" || cellB === "" || cellC === "") {
             continue;
         }
-        if(cellA === cellB && cellB === cellC){
+        if (cellA === cellB && cellB === cellC) {
             roundWon = true;
             break;
-            }
         }
+    }
 
-    if (roundWon){
+    if (roundWon) {
         statusText.textContent = `${currentPlayer} wins!`;
-        running = false;
-    } else if(!options.includes("")){
+        running = false; // Stop the game
+    } else if (!options.includes("")) {
         statusText.textContent = `Draw!`;
-        running = false;
-    } else {
-        changePlayer();
-    } 
+        running = false; // Stop the game
+    } else if (running) {
+        changePlayer(); // Continue the game
+    }
 }
 
 function restartGame(){
@@ -83,4 +91,77 @@ function restartGame(){
         cell.textContent = "";
     });
     running = true;
+}
+
+//Alpha Beta Pruning Algorithm
+
+function getBestMove() {
+    if (!running) return; // Stop if the game is over
+
+    let bestScore = -Infinity;
+    let move;
+
+    for (let i = 0; i < options.length; i++) {
+        if (options[i] === "") {
+            options[i] = "O"; // AI's move
+            let score = minimax(options, 0, false, -Infinity, Infinity);
+            options[i] = ""; // Undo move
+            if (score > bestScore) {
+                bestScore = score;
+                move = i;
+            }
+        }
+    }
+
+    // Make the best move
+    options[move] = "O";
+    cells[move].textContent = "O";
+    checkWinner(); // Check for winner
+}
+
+function minimax(board, depth, isMaximizing, alpha, beta) {
+    let winner = checkWinnerForMinimax();
+    if (winner !== null){
+        if(winner === "O") return 10 - depth; // AI wins
+        if(winner === "X") return depth - 10; // Human wins
+        return 0; // Draw
+    }
+
+    if(isMaximizing){
+        let maxEval = -Infinity;
+        for (let i = 0; i < board.length; i++) {
+            if (board[i] === "") {
+                board[i] = "O";
+                let eval = minimax(board, depth + 1, false, alpha, beta);
+                board[i] = "";
+                maxEval = Math.max(maxEval, eval);
+                alpha = Math.max(alpha, eval);
+                if (beta <= alpha) break; // Prune
+            }
+        }
+        return maxEval;
+    } else {
+        let minEval = Infinity;
+        for (let i = 0; i < board.length; i++) {
+            if (board[i] === "") {
+                board[i] = "X";
+                let eval = minimax(board, depth + 1, true, alpha, beta);
+                board[i] = "";
+                minEval = Math.min(minEval, eval);
+                beta = Math.min(beta, eval);
+                if (beta <= alpha) break; // Prune
+            }
+        }
+        return minEval;
+    }
+}
+
+function checkWinnerForMinimax() {
+    for (let i = 0; i < winConditions.length; i++) {
+        const [a, b, c] = winConditions[i];
+        if (options[a] && options[a] === options[b] && options[a] === options[c]) {
+            return options[a];
+        }
+    }
+    return options.includes("") ? null : "Draw";
 }
